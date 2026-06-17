@@ -1,0 +1,1 @@
+# club_device_management
