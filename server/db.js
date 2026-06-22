@@ -1,5 +1,9 @@
-const sqlite3 = require("sqlite3").verbose();
-const path = require("path");
+import sqlite3pkg from "sqlite3";
+const sqlite3 = sqlite3pkg.verbose();
+import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // 指定資料庫檔案儲存路徑（會在專案根目錄生成 database.sqlite 檔案）
 const DB_PATH = path.join(__dirname, "database.sqlite");
@@ -96,4 +100,4 @@ function initializeTables() {
 }
 
 // 匯出 db 連線物件供其他檔案使用
-module.exports = db;
+export default db;
