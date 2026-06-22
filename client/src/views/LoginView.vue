@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import axios from 'axios'
+import { post } from '../api.js'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -23,13 +23,12 @@ async function handleLogin() {
 
   loading.value = true
   try {
-    const res = await axios.post('/api/auth/login', {
+    const data = await post('/api/auth/login', {
       student_id: form.value.student_id,
       password: form.value.password,
     })
-
-    localStorage.setItem('token', res.data.token)
-    localStorage.setItem('user', JSON.stringify(res.data.user))
+    localStorage.setItem('token', data.token)
+    localStorage.setItem('user', JSON.stringify(data.user))
     router.push('/')
   } catch (err) {
     errorMsg.value = err.response?.data?.message || '登入失敗，請稍後再試'

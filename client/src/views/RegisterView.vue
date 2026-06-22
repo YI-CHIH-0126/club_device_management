@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import axios from 'axios'
+import { post } from '../api.js'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -32,13 +32,12 @@ async function handleRegister() {
 
   loading.value = true
   try {
-    const res = await axios.post('/api/auth/register', {
+    await post('/api/auth/register', {
       student_id: form.value.student_id,
       password: form.value.password,
       name: form.value.name,
       department_class: form.value.department_class,
     })
-
     router.push('/login')
   } catch (err) {
     errorMsg.value = err.response?.data?.message || '註冊失敗，請稍後再試'
