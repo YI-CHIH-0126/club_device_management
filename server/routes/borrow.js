@@ -19,7 +19,7 @@ const upload = multer({ storage })
 const router = express.Router()
 
 // POST /api/borrow - 借用工具
-router.post('/', requireAuth, upload.single('photo_before'), (req, res) => {
+router.post('/borrow', requireAuth, upload.single('photo_before'), (req, res) => {
   const { equipment_id, expected_return_time } = req.body
   const student_id = req.user.student_id
 
