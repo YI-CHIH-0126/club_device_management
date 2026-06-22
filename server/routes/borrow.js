@@ -29,24 +29,29 @@ router.post('/borrow', requireAuth, upload.single('photo_before'), (req, res) =>
 
   const photo_before_url = `/uploads/${req.file.filename}`
 
-  db.get('SELECT * FROM equipments WHERE id = ?', [equipment_id], (err, equipment) => {
+  db.get('SELECT suspended FROM users WHERE student_id = ?', [student_id], (err, user) => {
     if (err) return res.status(500).json({ message: '資料庫錯誤' })
-    if (!equipment) return res.status(404).json({ message: '器材不存在' })
-    if (equipment.category !== 'tool') return res.status(400).json({ message: '此器材為耗材，請使用領用功能' })
-    if (equipment.status !== 'available') return res.status(400).json({ message: '此器材目前無法借用' })
+    if (user?.suspended) return res.status(403).json({ message: '您的借用權限已被暫停' })
 
-    db.run(
-      'INSERT INTO borrow_records (equipment_id, student_id, expected_return_time, photo_before_url) VALUES (?, ?, ?, ?)',
-      [equipment_id, student_id, expected_return_time, photo_before_url],
-      function (err) {
-        if (err) return res.status(500).json({ message: '借用失敗' })
+    db.get('SELECT * FROM equipments WHERE id = ?', [equipment_id], (err, equipment) => {
+      if (err) return res.status(500).json({ message: '資料庫錯誤' })
+      if (!equipment) return res.status(404).json({ message: '器材不存在' })
+      if (equipment.category !== 'tool') return res.status(400).json({ message: '此器材為耗材，請使用領用功能' })
+      if (equipment.status !== 'available') return res.status(400).json({ message: '此器材目前無法借用' })
 
-        db.run("UPDATE equipments SET status = 'borrowed' WHERE id = ?", [equipment_id], (err) => {
-          if (err) return res.status(500).json({ message: '狀態更新失敗' })
-          res.status(201).json({ message: '借用成功', record_id: this.lastID })
-        })
-      }
-    )
+      db.run(
+        'INSERT INTO borrow_records (equipment_id, student_id, expected_return_time, photo_before_url) VALUES (?, ?, ?, ?)',
+        [equipment_id, student_id, expected_return_time, photo_before_url],
+        function (err) {
+          if (err) return res.status(500).json({ message: '借用失敗' })
+
+          db.run("UPDATE equipments SET status = 'borrowed' WHERE id = ?", [equipment_id], (err) => {
+            if (err) return res.status(500).json({ message: '狀態更新失敗' })
+            res.status(201).json({ message: '借用成功', record_id: this.lastID })
+          })
+        }
+      )
+    })
   })
 })
 
@@ -90,28 +95,33 @@ router.post('/consume', requireAuth, (req, res) => {
     return res.status(400).json({ message: '請填寫器材與領用數量' })
   }
 
-  db.get('SELECT * FROM equipments WHERE id = ?', [equipment_id], (err, equipment) => {
+  db.get('SELECT suspended FROM users WHERE student_id = ?', [student_id], (err, user) => {
     if (err) return res.status(500).json({ message: '資料庫錯誤' })
-    if (!equipment) return res.status(404).json({ message: '器材不存在' })
-    if (equipment.category !== 'consumable') return res.status(400).json({ message: '此器材為工具，請使用借用功能' })
-    if (equipment.stock_quantity < quantity) return res.status(400).json({ message: '庫存不足' })
+    if (user?.suspended) return res.status(403).json({ message: '您的借用權限已被暫停' })
 
-    db.run(
-      'INSERT INTO consumable_logs (equipment_id, student_id, quantity) VALUES (?, ?, ?)',
-      [equipment_id, student_id, quantity],
-      function (err) {
-        if (err) return res.status(500).json({ message: '領用失敗' })
+    db.get('SELECT * FROM equipments WHERE id = ?', [equipment_id], (err, equipment) => {
+      if (err) return res.status(500).json({ message: '資料庫錯誤' })
+      if (!equipment) return res.status(404).json({ message: '器材不存在' })
+      if (equipment.category !== 'consumable') return res.status(400).json({ message: '此器材為工具，請使用借用功能' })
+      if (equipment.stock_quantity < quantity) return res.status(400).json({ message: '庫存不足' })
 
-        db.run(
-          'UPDATE equipments SET stock_quantity = stock_quantity - ? WHERE id = ?',
-          [quantity, equipment_id],
-          (err) => {
-            if (err) return res.status(500).json({ message: '庫存更新失敗' })
-            res.status(201).json({ message: '領用成功' })
-          }
-        )
-      }
-    )
+      db.run(
+        'INSERT INTO consumable_logs (equipment_id, student_id, quantity) VALUES (?, ?, ?)',
+        [equipment_id, student_id, quantity],
+        function (err) {
+          if (err) return res.status(500).json({ message: '領用失敗' })
+
+          db.run(
+            'UPDATE equipments SET stock_quantity = stock_quantity - ? WHERE id = ?',
+            [quantity, equipment_id],
+            (err) => {
+              if (err) return res.status(500).json({ message: '庫存更新失敗' })
+              res.status(201).json({ message: '領用成功' })
+            }
+          )
+        }
+      )
+    })
   })
 })
 

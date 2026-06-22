@@ -95,6 +95,9 @@ function initializeTables() {
       },
     );
 
+    // 新增 suspended 欄位（若已存在會自動忽略）
+    db.run("ALTER TABLE users ADD COLUMN suspended INTEGER DEFAULT 0", () => {});
+
     console.log("所有資料表初始化檢查完成。");
   });
 }

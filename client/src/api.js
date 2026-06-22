@@ -25,3 +25,15 @@ export function post(url, body, isFormData = false) {
     body: isFormData ? body : JSON.stringify(body),
   })
 }
+
+export function put(url, body) {
+  return request(url, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+export function del(url) {
+  return request(url, { method: 'DELETE' })
+}

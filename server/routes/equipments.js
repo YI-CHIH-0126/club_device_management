@@ -6,10 +6,18 @@ const router = express.Router();
 
 // GET /api/equipments
 router.get("/", (req, res) => {
-  db.all("SELECT * FROM equipments ORDER BY created_at DESC", (err, rows) => {
-    if (err) return res.status(500).json({ message: "資料庫錯誤" });
-    res.json(rows);
-  });
+  db.all(
+    `SELECT e.*,
+       (SELECT br.expected_return_time FROM borrow_records br
+        WHERE br.equipment_id = e.id AND br.actual_return_time IS NULL
+        ORDER BY br.borrow_time DESC LIMIT 1) AS expected_return_time
+     FROM equipments e
+     ORDER BY e.created_at DESC`,
+    (err, rows) => {
+      if (err) return res.status(500).json({ message: "資料庫錯誤" });
+      res.json(rows);
+    }
+  );
 });
 
 // POST /api/equipments - 幹部新增器材

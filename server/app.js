@@ -11,6 +11,7 @@ import authRouter from "./routes/auth.js";
 import equipmentsRouter from "./routes/equipments.js";
 import borrowRouter from "./routes/borrow.js";
 import recordsRouter from "./routes/records.js";
+import adminUsersRouter from "./routes/adminUsers.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,5 +30,6 @@ app.use("/api/auth", authRouter);
 app.use("/api/equipments", equipmentsRouter);
 app.use("/api", borrowRouter);
 app.use("/api/records", recordsRouter);
+app.use("/api/admin/users", adminUsersRouter);
 
 export default app;

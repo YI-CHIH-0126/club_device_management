@@ -15,6 +15,7 @@ const returnLoading = ref(false)
 const returnMsg = ref({ type: '', text: '' })
 
 const user = JSON.parse(localStorage.getItem('user') || '{}')
+const isAdmin = user.role === 'admin'
 
 async function fetchRecords() {
   try {
@@ -82,6 +83,11 @@ onMounted(fetchRecords)
       <nav>
         <span class="user-name">{{ user.name }}</span>
         <a href="/">器材列表</a>
+        <template v-if="isAdmin">
+          <a href="/admin/manage">器材管理</a>
+          <a href="/admin/records">借用紀錄</a>
+          <a href="/admin/members">社員管理</a>
+        </template>
         <button class="logout-btn" @click="logout">登出</button>
       </nav>
     </header>

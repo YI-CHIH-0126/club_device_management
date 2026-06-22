@@ -19,6 +19,16 @@ const consumeForm = ref({ quantity: 1 })
 const consumeLoading = ref(false)
 const consumeMsg = ref({ type: '', text: '' })
 
+function toLocalDatetimeValue(date) {
+  const pad = n => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+const minDateTime = computed(() => toLocalDatetimeValue(new Date()))
+
+const user = JSON.parse(localStorage.getItem('user') || '{}')
+const isAdmin = user.role === 'admin'
+
 const tools = computed(() => equipments.value.filter(e => e.category === 'tool'))
 const consumables = computed(() => equipments.value.filter(e => e.category === 'consumable'))
 
@@ -34,7 +44,9 @@ async function fetchEquipments() {
 
 function openBorrow(equipment) {
   selectedEquipment.value = equipment
-  borrowForm.value = { expected_return_time: '', photo_before: null }
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  borrowForm.value = { expected_return_time: toLocalDatetimeValue(tomorrow), photo_before: null }
   borrowMsg.value = { type: '', text: '' }
   showBorrowModal.value = true
 }
@@ -96,6 +108,11 @@ async function submitConsume() {
   }
 }
 
+function formatTime(t) {
+  if (!t) return '—'
+  return new Date(t).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
 function logout() {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
@@ -111,6 +128,11 @@ onMounted(fetchEquipments)
       <h1>社團器材管理系統</h1>
       <nav>
         <a href="/dashboard">我的紀錄</a>
+        <template v-if="isAdmin">
+          <a href="/admin/manage">器材管理</a>
+          <a href="/admin/records">借用紀錄</a>
+          <a href="/admin/members">社員管理</a>
+        </template>
         <button class="logout-btn" @click="logout">登出</button>
       </nav>
     </header>
@@ -127,6 +149,9 @@ onMounted(fetchEquipments)
             <div class="card-name">{{ e.name }}</div>
             <div class="card-status" :class="e.status">
               {{ e.status === 'available' ? '可借用' : e.status === 'borrowed' ? '出借中' : '已報廢' }}
+            </div>
+            <div v-if="e.status === 'borrowed' && e.expected_return_time" class="return-time">
+              預計歸還：{{ formatTime(e.expected_return_time) }}
             </div>
             <button
               v-if="e.status === 'available'"
@@ -162,7 +187,7 @@ onMounted(fetchEquipments)
         <h3>借用：{{ selectedEquipment?.name }}</h3>
         <div class="form-group">
           <label>預計歸還時間</label>
-          <input type="datetime-local" v-model="borrowForm.expected_return_time" />
+          <input type="datetime-local" v-model="borrowForm.expected_return_time" :min="minDateTime" />
         </div>
         <div class="form-group">
           <label>使用前照片</label>
@@ -248,6 +273,11 @@ h2 { font-size: 1.1rem; color: #555; margin-bottom: 1rem; border-left: 3px solid
 .card-status.available { background: #f0f9eb; color: #67c23a; }
 .card-status.borrowed { background: #fdf6ec; color: #e6a23c; }
 .card-status.scrapped { background: #fef0f0; color: #f56c6c; }
+
+.return-time {
+  font-size: 0.78rem;
+  color: #e6a23c;
+}
 
 .btn-primary {
   background: #409eff;
