@@ -18,7 +18,6 @@ const loading = ref(false)
 
 async function handleRegister() {
   errorMsg.value = ''
-  successMsg.value = ''
 
   if (!form.value.student_id || !form.value.password || !form.value.name || !form.value.department_class) {
     errorMsg.value = '請填寫所有必填欄位'
